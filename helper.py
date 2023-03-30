@@ -42,21 +42,25 @@ class board:
             for j in range(self.cols - 3):
                 if((self.state[i][j] == self.state[i][j+1]) and (self.state[i][j] == self.state[i][j+2]) and (self.state[i][j] == self.state[i][j+3]) and ((self.state[i][j] == 1) or (self.state[i][j] == 2))):
                     self.game_end = True
+                    return
                 
         for i in range(self.rows - 3):
             for j in range(self.cols):
                 if((self.state[i][j] == self.state[i+1][j]) and (self.state[i][j] == self.state[i+2][j]) and (self.state[i][j] == self.state[i+3][j]) and ((self.state[i][j] == 1) or (self.state[i][j] == 2))):
                     self.game_end = True
+                    return
                 
         for i in range(self.rows - 3):
             for j in range(self.cols - 3):
                 if((self.state[i][j] == self.state[i+1][j+1]) and (self.state[i][j] == self.state[i+2][j+2]) and (self.state[i][j] == self.state[i+3][j+3]) and ((self.state[i][j] == 1) or (self.state[i][j] == 2))):
                     self.game_end = True
+                    return
 
         for i in range(self.rows - 1, 2, -1):
             for j in range(self.cols - 3):
                 if((self.state[i][j] == self.state[i-1][j+1]) and (self.state[i][j] == self.state[i-2][j+2]) and (self.state[i][j] == self.state[i-3][j+3]) and ((self.state[i][j] == 1) or (self.state[i][j] == 2))):
                     self.game_end = True
+                    return
                         
         self.game_end = False
     
@@ -131,7 +135,9 @@ class network(nn.Module):
                 flat_state = [item for sublist in state for item in sublist]
                 for i in range(self.cols):
                     flat_state.append(0)
-                flat_state[len(flat_state) - self.cols + actions[action]] = 1
+                # print(len(flat_state), len(flat_state) - self.cols + actions[action])
+                # print(action, len(actions))
+                flat_state[len(flat_state) - self.cols + action] = 1
                 flat_state = torch.Tensor(flat_state)
                 values = torch.Tensor([values])
                 # print(values)
@@ -159,12 +165,16 @@ class game:
         self.board.reset()
         states = []
         actions = []
-        
         i = 0
-        while not self.board.game_end():
-            states.append(self.board.state)
+        while not self.board.game_end:
+            temp = []
+            for sublist in self.board.state:
+                ls = []
+                for item in sublist:
+                    ls.append(item)
+                temp.append(ls)
+            states.append(temp)
             actions.append(self.board.get_action_and_move((i%2) + 1))
-
             flag = 0
             for j in range(self.board.cols):
                 if(self.board.state[self.board.rows - 1][j] == 0):
@@ -174,6 +184,9 @@ class game:
                 return states, actions, 0
 
             i += 1
+        states.append(self.board.state)
+        # for state in states:
+        #     print(state)
 
         if i%2 == 0:
             return states, actions, 2
@@ -183,7 +196,7 @@ class game:
     def train(self, episodes):
         for i in range(episodes):
             states, actions, player = self.get_episode()
-            
+
             if player == 1:
                 value1 = 100
                 value2 = -100
@@ -206,8 +219,9 @@ class game:
                     states_train1.append(states[j-1])
                     actions_train1.append(actions[j-1])
             
-            self.model.fit(10, 0.01, states_train1, actions_train1, value1)
-            self.model.fit(10, 0.01, states_train2, actions_train2, value2)
+            self.model.fit(10, 0.5, states_train1, actions_train1, value1)
+            self.model.fit(10, 0.5, states_train2, actions_train2, value2)
+            print(f"{i}th Episode Trained")
         torch.save(self.model.state_dict(), "./model.pt")
 
 class play:
@@ -234,16 +248,16 @@ class play:
                     flat_state[len(flat_state) - self.board.cols + j] = 1
                     flat_state = torch.Tensor(flat_state)
                     values.append(self.model(flat_state))
+                    print(values)
 
-                values.sort()
-                action = 0
-                while not self.board.check_valid(action) and action < self.board.cols:
-                    action += 1
+                print(values)
                 
                 print("Model move: ", action)
                 self.board.move(2, action)
             
             i += 1
+        self.display()
+        print("Game Ended")
 
     def display(self):
         for i in range(self.board.rows-1, -1, -1):
