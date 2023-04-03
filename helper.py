@@ -37,7 +37,7 @@ class game:
         else:
             return states, actions, 1
 
-    def train(self, episodes):
+    def train(self, episodes, gamma):
         for i in tqdm(range(episodes), desc="Games played"):
             states, actions, player = self.get_episode()
 
@@ -53,19 +53,27 @@ class game:
 
             states_train1 = []
             actions_train1 = []
+            values_train1 = []
+            values_train2 = []
             states_train2 = []
             actions_train2 = []
             for j in range(1, len(actions) + 1):
                 if(j%2 == 0):
                     states_train2.append(states[j-1])
                     actions_train2.append(actions[j-1])
+                    values_train2.append(value2)
+                    value2 = value2 * gamma
+
                 else:
                     states_train1.append(states[j-1])
                     actions_train1.append(actions[j-1])
+                    values_train1.append(value1)
+                    value1 = value1 * gamma
+                
             
-            self.model.fit(2, 0.01, states_train1, actions_train1, value1)
+            self.model.fit(2, 0.01, states_train1, actions_train1, values_train1)
             # print([params.data for params in self.model.parameters()])
-            self.model.fit(2, 0.01, states_train2, actions_train2, value2)
+            self.model.fit(2, 0.01, states_train2, actions_train2, values_train2)
             # print(f"{i}th Episode Trained", end="\r")
         torch.save(self.model.state_dict(), "./model_10000.pt")
 
@@ -85,15 +93,16 @@ class play:
                 print()
                 self.board.move(1, action)
             else:
-                values = []
-                for j in range(self.board.cols):
-                    flat_state = [item for sublist in self.board.state for item in sublist]
-                    for k in range(self.board.cols):
-                        flat_state.append(0)
-                    flat_state[len(flat_state) - self.board.cols + j] = 1
-                    flat_state = torch.Tensor(flat_state)
-                    values.append(self.model(flat_state).detach().numpy())
-                    # print(values)
+                state = torch.Tensor(self.board.state)[None, :]
+                values = self.model(state).detach().numpy()
+                # for j in range(self.board.cols):
+                #     # flat_state = [item for sublist in self.board.state for item in sublist]
+                #     # for k in range(self.board.cols):
+                #     #     flat_state.append(0)
+                #     # flat_state[len(flat_state) - self.board.cols + j] = 1
+                #     flat_state = torch.Tensor(flat_state)
+                #     values.append(self.model(flat_state).detach().numpy())
+                #     # print(values)
                 
                 action = np.argmax(np.array(values))
                 while self.board.state[self.board.rows - 1][action] != 0:
