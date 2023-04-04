@@ -66,7 +66,12 @@ class board:
                         
         self.game_end = False
     
-    def get_action_and_move(self, player): 
+    def get_action_and_move(self, player, last_move): 
+        p = random.uniform(0, 1)
+
+        if(p < 0.5):
+            return (last_move+1)%(self.cols)
+        
         temp = []
         for i in range(self.cols):
             temp.append(i)

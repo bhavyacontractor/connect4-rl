@@ -2,7 +2,9 @@ from architecture import *
 
 class game:
     def __init__(self, b):
-        self.model = network_linear(b.rows, b.cols)
+        self.teacher = network_linear(b.rows, b.cols)
+        self.student = network_linear(b.rows, b.cols)
+        self.teacher.load_state_dict(self.student.state_dict())
         self.board = b
 
     def get_episode(self):
@@ -18,7 +20,12 @@ class game:
                     ls.append(item)
                 temp.append(ls)
             states.append(temp)
-            actions.append(self.board.get_action_and_move((i%2) + 1))
+
+            if(i != 0):
+                actions.append(self.board.get_action_and_move((i%2) + 1, actions[-1]))
+            else:
+                actions.append(self.board.get_action_and_move((i%2) + 1, 0))
+
             flag = 0
             for j in range(self.board.cols):
                 if(self.board.state[self.board.rows - 1][j] == 0):
@@ -42,11 +49,11 @@ class game:
             states, actions, player = self.get_episode()
 
             if player == 1:
-                value1 = 100
-                value2 = -100
+                value1 = 1
+                value2 = -1
             elif player == 2:
-                value2 = 100
-                value1 = -100
+                value2 = 1
+                value1 = -1
             elif player == 0:
                 value1 = 0
                 value2 = 0
@@ -61,21 +68,36 @@ class game:
                 if(j%2 == 0):
                     states_train2.append(states[j-1])
                     actions_train2.append(actions[j-1])
-                    values_train2.append(value2)
-                    value2 = value2 * gamma
+                    if(j < len(actions)):
+                        value = torch.Tensor(states[j])[None, :]
+                        value = self.teacher(value).detach().numpy()
+                        value = max(value)
+                        values_train2.append(gamma*value)
+                    else:
+                        values_train2.append(value2)
 
                 else:
                     states_train1.append(states[j-1])
                     actions_train1.append(actions[j-1])
                     values_train1.append(value1)
-                    value1 = value1 * gamma
+                    if(j < len(actions)):
+                        value = torch.Tensor(states[j])[None, :]
+                        value = self.teacher(value).detach().numpy()
+                        value = max(value)
+                        values_train1.append(gamma*value)
+                    else:
+                        values_train1.append(value1)
                 
-            
-            self.model.fit(2, 0.01, states_train1, actions_train1, values_train1)
+            self.student.fit(2, 0.001, states_train1, actions_train1, values_train1)
             # print([params.data for params in self.model.parameters()])
-            self.model.fit(2, 0.01, states_train2, actions_train2, values_train2)
+            self.student.fit(2, 0.001, states_train2, actions_train2, values_train2)
             # print(f"{i}th Episode Trained", end="\r")
-        torch.save(self.model.state_dict(), "./model_10000.pt")
+
+            if(i%100 == 0):
+                self.teacher.load_state_dict(self.student.state_dict())
+        
+        self.teacher.load_state_dict(self.student.state_dict())
+        torch.save(self.teacher.state_dict(), "./model_10000.pt")
 
 class play:
     def __init__(self, m):
