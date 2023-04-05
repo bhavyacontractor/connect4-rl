@@ -5,15 +5,18 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+rows = 6
+cols = 7
+
 class board:
-    def __init__(self, r=6, c=7):
-        self.rows = r
-        self.cols = c
+    def __init__(self):
+        self.rows = rows
+        self.cols = cols
         self.state = []
         self.game_end = False
-        for i in range(r):
+        for i in range(self.rows):
             temp = []
-            for j in range(c):
+            for j in range(self.cols):
                 temp.append(0)
             self.state.append(temp)
 
@@ -66,12 +69,7 @@ class board:
                         
         self.game_end = False
     
-    def get_action_and_move(self, player, last_move): 
-        p = random.uniform(0, 1)
-
-        if(p < 0.5):
-            return (last_move+1)%(self.cols)
-        
+    def get_action_and_move(self, player): 
         temp = []
         for i in range(self.cols):
             temp.append(i)

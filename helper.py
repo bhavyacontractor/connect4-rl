@@ -2,8 +2,8 @@ from architecture import *
 
 class game:
     def __init__(self, b):
-        self.teacher = network_linear(b.rows, b.cols)
-        self.student = network_linear(b.rows, b.cols)
+        self.teacher = network_linear()
+        self.student = network_linear()
         self.teacher.load_state_dict(self.student.state_dict())
         self.board = b
 
@@ -21,10 +21,7 @@ class game:
                 temp.append(ls)
             states.append(temp)
 
-            if(i != 0):
-                actions.append(self.board.get_action_and_move((i%2) + 1, actions[-1]))
-            else:
-                actions.append(self.board.get_action_and_move((i%2) + 1, 0))
+            actions.append(self.board.get_action_and_move((i%2) + 1))
 
             flag = 0
             for j in range(self.board.cols):

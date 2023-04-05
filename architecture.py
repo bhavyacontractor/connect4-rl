@@ -1,12 +1,12 @@
 from board import *
 
 class network_linear(nn.Module):
-    def __init__(self, r, c):
+    def __init__(self):
         super().__init__()
         # input wil be the 6 x 7 board
         # output will be a vector of size 7 giving q-values of for each action
-        self.rows = r
-        self.cols = c
+        self.rows = rows
+        self.cols = cols
         self.conv1 = nn.Conv2d(1, 32, kernel_size=5, padding=2)
         self.conv2 = nn.Conv2d(32, 32, kernel_size=5, padding=2)
         self.conv3 = nn.Conv2d(32, 32, kernel_size=5, padding=2)
