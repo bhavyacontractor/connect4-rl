@@ -33,9 +33,7 @@ class game:
 
             i += 1
         states.append(self.board.state)
-        # for state in states:
-        #     print(state)
-
+        
         if i%2 == 0:
             return states, actions, 2
         else:
@@ -95,50 +93,3 @@ class game:
         
         self.teacher.load_state_dict(self.student.state_dict())
         torch.save(self.teacher.state_dict(), "./model_10000.pt")
-
-class play:
-    def __init__(self, m):
-        self.model = m
-        self.board = board()
-    
-    def start(self):
-        i = 1
-        while not self.board.game_end:
-            self.display()
-
-            if(i%2 == 1):
-                print("Your move: ", end="")
-                action = int(input())
-                print()
-                self.board.move(1, action)
-            else:
-                state = torch.Tensor(self.board.state)[None, :]
-                values = self.model(state).detach().numpy()
-                # for j in range(self.board.cols):
-                #     # flat_state = [item for sublist in self.board.state for item in sublist]
-                #     # for k in range(self.board.cols):
-                #     #     flat_state.append(0)
-                #     # flat_state[len(flat_state) - self.board.cols + j] = 1
-                #     flat_state = torch.Tensor(flat_state)
-                #     values.append(self.model(flat_state).detach().numpy())
-                #     # print(values)
-                
-                action = np.argmax(np.array(values))
-                while self.board.state[self.board.rows - 1][action] != 0:
-                    action = np.argmax(np.array(values))
-                    values[action] = -1e9
-                print(values)
-                
-                print("Model move: ", action)
-                self.board.move(2, action)
-            
-            i += 1
-        self.display()
-        print("Game Ended")
-
-    def display(self):
-        for i in range(self.board.rows-1, -1, -1):
-            for j in range(self.board.cols):
-                print(self.board.state[i][j], end=" ")
-            print()
-        print()

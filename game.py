@@ -5,7 +5,7 @@ from pygame.locals import *
 from helper import *
 
 model = network_linear()
-model.load_state_dict(torch.load("./model_10000.pt", map_location=torch.device("cpu")))
+model.load_state_dict(torch.load("./model_final.pt", map_location=torch.device("cpu")))
 b = board()
 
 

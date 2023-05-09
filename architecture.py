@@ -18,10 +18,10 @@ class network_linear(nn.Module):
         self.flatten = nn.Flatten(start_dim=0, end_dim=2)
 
         linear_input_size = self.rows * self.cols * 32
-        self.linear1 = nn.Linear(linear_input_size, 50)
-        self.linear2 = nn.Linear(50, 50)
-        self.linear3 = nn.Linear(50, 50)
-        self.linear4 = nn.Linear(50, 7)
+        self.MLP1 = nn.Linear(linear_input_size, 50)
+        self.MLP2 = nn.Linear(50, 50)
+        self.MLP3 = nn.Linear(50, 50)
+        self.MLP4 = nn.Linear(50, 7)
 
         
     def forward(self, x):
@@ -34,10 +34,10 @@ class network_linear(nn.Module):
         out = F.leaky_relu(self.conv7(out))
 
         out = self.flatten(out)
-        out = F.leaky_relu(self.linear1(out))
-        out = F.leaky_relu(self.linear2(out))
-        out = F.leaky_relu(self.linear3(out))
-        out = self.linear4(out)
+        out = F.leaky_relu(self.MLP1(out))
+        out = F.leaky_relu(self.MLP2(out))
+        out = F.leaky_relu(self.MLP3(out))
+        out = self.MLP4(out)
         return out
     
     def training_step(self, state, value):
