@@ -4,3 +4,11 @@
 ``` 
 pip install -r requirements.txt 
 ```
+* Run the following command to train the network:
+```
+python train.py
+```
+* Run the following command to play against the trained model in a pygame GUI:
+```
+python play.py
+```
