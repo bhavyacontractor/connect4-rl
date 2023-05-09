@@ -1,1 +1,1 @@
-# connect4-rl
+# CONNECT-4 USING DQN
